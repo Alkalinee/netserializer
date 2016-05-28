@@ -43,6 +43,14 @@ namespace NetSerializer
 		/// <summary>
 		/// Initialize NetSerializer
 		/// </summary>
+		/// <param name="rootType">Type to be (de)serialized</param>
+		public Serializer(Type rootType) : this(new[] {rootType}, new Settings())
+		{
+		}
+
+		/// <summary>
+		/// Initialize NetSerializer
+		/// </summary>
 		/// <param name="rootTypes">Types to be (de)serialized</param>
 		/// <param name="settings">Settings</param>
 		public Serializer(IEnumerable<Type> rootTypes, Settings settings)
@@ -282,6 +290,46 @@ namespace NetSerializer
 		public void Deserialize(Stream stream, out object ob)
 		{
 			ObjectSerializer.Deserialize(this, stream, out ob);
+		}
+
+		/// <summary>
+		/// Deserialize the given byte array
+		/// </summary>
+		/// <typeparam name="T">The type of the object</typeparam>
+		/// <param name="bytes">The byte array which contains the serialized object</param>
+		/// <returns>The deserialized object</returns>
+		public T Deserialize<T>(byte[] bytes)
+		{
+			return Deserialize<T>(bytes, 0);
+		}
+
+		/// <summary>
+		/// Deserialize the given byte array, starting add the <see cref="index" />
+		/// </summary>
+		/// <typeparam name="T">The type of the object</typeparam>
+		/// <param name="bytes">The byte array which contains the serialized object</param>
+		/// <param name="index"></param>
+		/// <returns>The deserialized object</returns>
+		public T Deserialize<T>(byte[] bytes, int index)
+		{
+			object o;
+			using (var ms = new MemoryStream(bytes, index, bytes.Length - index))
+				ObjectSerializer.Deserialize(this, ms, out o);
+			return (T) o;
+		}
+
+		/// <summary>
+		/// Serialize the object to a byte array
+		/// </summary>
+		/// <param name="data">The object to serialize</param>
+		/// <returns>The serialized object</returns>
+		public byte[] Serialize(object data)
+		{
+			using (var ms = new MemoryStream())
+			{
+				ObjectSerializer.Serialize(this, ms, data);
+				return ms.ToArray();
+			}
 		}
 
 		/// <summary>
